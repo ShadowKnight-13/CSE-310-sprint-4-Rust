@@ -1,0 +1,8 @@
+[package]
+name = "dice_gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eframe = "0.24"
+dice_core = { path = "../dice_core" }
