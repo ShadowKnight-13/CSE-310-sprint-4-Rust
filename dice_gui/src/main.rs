@@ -31,6 +31,7 @@ struct DiceApp {
     last_roll: Option<Roll>,
     error_message: String,
     history: Vec<String>,
+    favorites: Vec<String>,
 }
 
 impl Default for DiceApp {
@@ -40,7 +41,42 @@ impl Default for DiceApp {
             last_roll: None,
             error_message: String::new(),
             history: Vec::new(),
+            favorites: Vec::new(),
         }
+    }
+}
+
+impl DiceApp {
+    fn run_roll_notation(&mut self, notation: &str) {
+        // Borrowing example: pass notation without moving ownership.
+        match make_roll(notation) {
+            Ok(roll) => {
+                self.error_message.clear();
+                self.history
+                    .push(format!("{} => {:?} = {}", roll.notation, roll.results, roll.total));
+                self.last_roll = Some(roll);
+            }
+            Err(err) => {
+                self.last_roll = None;
+                self.error_message = err.to_string();
+            }
+        }
+    }
+
+    fn add_favorite(&mut self) {
+        let notation = self.notation.trim();
+        if notation.is_empty() {
+            self.error_message = "cannot favorite an empty notation".to_string();
+            return;
+        }
+
+        if self.favorites.iter().any(|f| f == notation) {
+            self.error_message = "favorite already exists".to_string();
+            return;
+        }
+
+        self.favorites.push(notation.to_owned());
+        self.error_message.clear();
     }
 }
 
@@ -55,19 +91,47 @@ impl eframe::App for DiceApp {
                 ui.text_edit_singleline(&mut self.notation);
             });
 
-            if ui.button("Roll").clicked() {
-                // Borrowing example: pass &self.notation without moving ownership.
-                match make_roll(&self.notation) {
-                    Ok(roll) => {
-                        self.error_message.clear();
-                        self.history
-                            .push(format!("{} => {:?} = {}", roll.notation, roll.results, roll.total));
-                        self.last_roll = Some(roll);
-                    }
-                    Err(err) => {
-                        self.last_roll = None;
-                        self.error_message = err.to_string();
-                    }
+            ui.horizontal(|ui| {
+                if ui.button("Roll").clicked() {
+                    let notation = self.notation.clone();
+                    self.run_roll_notation(&notation);
+                }
+
+                if ui.button("Favorite This Roll").clicked() {
+                    self.add_favorite();
+                }
+            });
+
+            if !self.favorites.is_empty() {
+                ui.separator();
+                ui.heading("Favorite Rolls");
+
+                let mut remove_index: Option<usize> = None;
+
+                // Loop over favorites so users can reroll with one click.
+                for idx in 0..self.favorites.len() {
+                    let favorite = self.favorites[idx].clone();
+                    ui.horizontal(|ui| {
+                        ui.label(&favorite);
+
+                        if ui.button("Roll Favorite").clicked() {
+                            self.notation = favorite.clone();
+                            self.run_roll_notation(&favorite);
+                        }
+
+                        if ui.button("Use").clicked() {
+                            self.notation = favorite.clone();
+                            self.error_message.clear();
+                        }
+
+                        if ui.button("Remove").clicked() {
+                            remove_index = Some(idx);
+                        }
+                    });
+                }
+
+                if let Some(idx) = remove_index {
+                    self.favorites.remove(idx);
                 }
             }
 
