@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Longsword",
+    "notation": "2d6+5",
+    "category": "Attacks"
+  },
+  {
+    "name": "STR save",
+    "notation": "1d20+9",
+    "category": "Saving Throws"
+  },
+  {
+    "name": "Con save",
+    "notation": "1d20+8",
+    "category": "Saving Throws"
+  },
+  {
+    "name": "Fireball",
+    "notation": "8d6",
+    "category": "Spells"
+  },
+  {
+    "name": "1d20",
+    "notation": "1d20",
+    "category": "Straight Dice"
+  }
+]
